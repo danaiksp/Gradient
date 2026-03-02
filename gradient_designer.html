@@ -379,6 +379,11 @@
                     <input type="range" id="inp-lin-angle" min="0" max="360" value="90">
                 </div>
                 <div class="row">
+                    <span class="label-text">Position:</span>
+                    <input type="number" id="num-lin-pos" min="0" max="100" value="50" style="width: 60px;">
+                    <input type="range" id="inp-lin-pos" min="0" max="100" value="50">
+                </div>
+                <div class="row">
                     <span class="label-text">Size:</span>
                     <input type="number" id="num-lin-size" min="1" max="200" value="50" style="width: 60px;">
                     <input type="range" id="inp-lin-size" min="1" max="200" value="50">
@@ -429,6 +434,11 @@
                     <span class="label-text">Line Size:</span>
                     <input type="number" id="num-cmb-lin-size" min="1" max="200" value="50" style="width:60px">
                     <input type="range" id="inp-cmb-lin-size" min="1" max="200" value="50">
+                </div>
+                <div class="row">
+                    <span class="label-text">Line Pos:</span>
+                    <input type="number" id="num-cmb-lin-pos" min="0" max="100" value="50" style="width:60px">
+                    <input type="range" id="inp-cmb-lin-pos" min="0" max="100" value="50">
                 </div>
                 <div class="row">
                     <span class="label-text" title="Left/Right">Center X:</span>
@@ -591,7 +601,7 @@
                 { id: 2, color: '#feb47b', pos: 100 }
             ],
             type: 'linear', // linear | radial | conic | combined
-            linAng: 90, linSize: 50,
+            linAng: 90, linSize: 50, linPos: 50,
             radX: 50, radY: 50, radR: 50, radShape: 'circle',
             conAng: 0, conX: 50, conY: 50,
             blend: 'overlay', revRad: true,
@@ -694,6 +704,7 @@
             // Inputs
             document.getElementById('inp-lin-angle').value = state.linAng; document.getElementById('num-lin-angle').value = state.linAng;
             if (document.getElementById('inp-lin-size')) { document.getElementById('inp-lin-size').value = state.linSize !== undefined ? state.linSize : 50; document.getElementById('num-lin-size').value = state.linSize !== undefined ? state.linSize : 50; }
+            if (document.getElementById('inp-lin-pos')) { document.getElementById('inp-lin-pos').value = state.linPos !== undefined ? state.linPos : 50; document.getElementById('num-lin-pos').value = state.linPos !== undefined ? state.linPos : 50; }
             document.getElementById('inp-rad-x').value = state.radX; document.getElementById('num-rad-x').value = state.radX;
             document.getElementById('inp-rad-y').value = state.radY; document.getElementById('num-rad-y').value = state.radY;
             document.getElementById('inp-rad-r').value = state.radR || 50; document.getElementById('num-rad-r').value = state.radR || 50;
@@ -702,6 +713,7 @@
             if (document.getElementById('inp-cmb-lin')) {
                 document.getElementById('inp-cmb-lin').value = state.linAng; document.getElementById('num-cmb-lin').value = state.linAng;
                 if (document.getElementById('inp-cmb-lin-size')) { document.getElementById('inp-cmb-lin-size').value = state.linSize !== undefined ? state.linSize : 50; document.getElementById('num-cmb-lin-size').value = state.linSize !== undefined ? state.linSize : 50; }
+                if (document.getElementById('inp-cmb-lin-pos')) { document.getElementById('inp-cmb-lin-pos').value = state.linPos !== undefined ? state.linPos : 50; document.getElementById('num-cmb-lin-pos').value = state.linPos !== undefined ? state.linPos : 50; }
                 document.getElementById('inp-cmb-rx').value = state.radX; document.getElementById('num-cmb-rx').value = state.radX;
                 document.getElementById('inp-cmb-ry').value = state.radY; document.getElementById('num-cmb-ry').value = state.radY;
                 document.getElementById('inp-cmb-rr').value = state.radR !== undefined ? state.radR : 50; document.getElementById('num-cmb-rr').value = state.radR !== undefined ? state.radR : 50;
@@ -800,12 +812,14 @@
         bindDualSlider('inp-size', 'num-size', state, 'size');
         bindDualSlider('inp-lin-angle', 'num-lin-angle', state, 'linAng');
         if (document.getElementById('inp-lin-size')) bindDualSlider('inp-lin-size', 'num-lin-size', state, 'linSize');
+        if (document.getElementById('inp-lin-pos')) bindDualSlider('inp-lin-pos', 'num-lin-pos', state, 'linPos');
         bindDualSlider('inp-rad-x', 'num-rad-x', state, 'radX');
         bindDualSlider('inp-rad-y', 'num-rad-y', state, 'radY');
         bindDualSlider('inp-rad-r', 'num-rad-r', state, 'radR');
 
         bindDualSlider('inp-cmb-lin', 'num-cmb-lin', state, 'linAng');
         if (document.getElementById('inp-cmb-lin-size')) bindDualSlider('inp-cmb-lin-size', 'num-cmb-lin-size', state, 'linSize');
+        if (document.getElementById('inp-cmb-lin-pos')) bindDualSlider('inp-cmb-lin-pos', 'num-cmb-lin-pos', state, 'linPos');
         bindDualSlider('inp-cmb-rx', 'num-cmb-rx', state, 'radX');
         bindDualSlider('inp-cmb-ry', 'num-cmb-ry', state, 'radY');
         bindDualSlider('inp-cmb-rr', 'num-cmb-rr', state, 'radR');
@@ -841,11 +855,14 @@
 
             if (state.type === 'linear') {
                 const rL = state.linSize !== undefined ? state.linSize : 50;
+                const posOff = (state.linPos !== undefined ? state.linPos : 50) - 50;
                 const ang = (state.linAng - 90) * Math.PI / 180;
-                const x1 = Math.round(50 + Math.cos(ang + Math.PI) * rL) + '%';
-                const y1 = Math.round(50 + Math.sin(ang + Math.PI) * rL) + '%';
-                const x2 = Math.round(50 + Math.cos(ang) * rL) + '%';
-                const y2 = Math.round(50 + Math.sin(ang) * rL) + '%';
+                const cx = 50 + posOff * Math.cos(ang);
+                const cy = 50 + posOff * Math.sin(ang);
+                const x1 = Math.round(cx + Math.cos(ang + Math.PI) * rL) + '%';
+                const y1 = Math.round(cy + Math.sin(ang + Math.PI) * rL) + '%';
+                const x2 = Math.round(cx + Math.cos(ang) * rL) + '%';
+                const y2 = Math.round(cy + Math.sin(ang) * rL) + '%';
                 gradTag = `<linearGradient id="grad" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stopHTML}</linearGradient>`;
                 circle.setAttribute('fill', 'url(#grad)');
             } else if (state.type === 'radial') {
@@ -854,11 +871,14 @@
                 circle.setAttribute('fill', 'url(#grad)');
             } else if (state.type === 'combined') {
                 const rL = state.linSize !== undefined ? state.linSize : 50;
+                const posOff = (state.linPos !== undefined ? state.linPos : 50) - 50;
                 const ang = (state.linAng - 90) * Math.PI / 180;
-                const x1 = Math.round(50 + Math.cos(ang + Math.PI) * rL) + '%';
-                const y1 = Math.round(50 + Math.sin(ang + Math.PI) * rL) + '%';
-                const x2 = Math.round(50 + Math.cos(ang) * rL) + '%';
-                const y2 = Math.round(50 + Math.sin(ang) * rL) + '%';
+                const cx = 50 + posOff * Math.cos(ang);
+                const cy = 50 + posOff * Math.sin(ang);
+                const x1 = Math.round(cx + Math.cos(ang + Math.PI) * rL) + '%';
+                const y1 = Math.round(cy + Math.sin(ang + Math.PI) * rL) + '%';
+                const x2 = Math.round(cx + Math.cos(ang) * rL) + '%';
+                const y2 = Math.round(cy + Math.sin(ang) * rL) + '%';
                 const linGrad = `<linearGradient id="grad_cmb_lin" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stopHTML}</linearGradient>`;
 
                 const radHTML = (state.revRad !== false) ? revStopsHTML : stopHTML;
@@ -930,8 +950,9 @@
         function copyCss() {
             const getLinStops = () => [...state.stops].sort((a, b) => a.pos - b.pos).map(x => {
                 const rL = state.linSize !== undefined ? state.linSize : 50;
-                if (rL === 50) return `${x.color} ${x.pos}%`;
-                const newP = Math.round(50 + (x.pos - 50) * (rL / 50));
+                const posOff = (state.linPos !== undefined ? state.linPos : 50) - 50;
+                if (rL === 50 && posOff === 0) return `${x.color} ${x.pos}%`;
+                const newP = Math.round(50 + (x.pos - 50) * (rL / 50) + posOff);
                 return `${x.color} ${newP}%`;
             }).join(', ');
 
@@ -977,6 +998,7 @@
             if (p.type) state.type = p.type; else state.type = 'linear';
             if (p.linAng !== undefined) state.linAng = p.linAng; else state.linAng = 45;
             if (p.linSize !== undefined) state.linSize = p.linSize; else state.linSize = 50;
+            if (p.linPos !== undefined) state.linPos = p.linPos; else state.linPos = 50;
             if (p.blend !== undefined) state.blend = p.blend;
             if (p.radX !== undefined) state.radX = p.radX;
             if (p.radY !== undefined) state.radY = p.radY;
@@ -997,7 +1019,7 @@
             const n = prompt("Enter new preset name:");
             if (!n || n.trim() === "") return;
             const s = state.stops.map(x => ({ p: x.pos, c: x.color }));
-            const newP = { n: n.trim(), s, type: state.type, linAng: state.linAng, linSize: state.linSize, blend: state.blend, radX: state.radX, radY: state.radY, radR: state.radR, radShape: state.radShape, conAng: state.conAng, conX: state.conX, conY: state.conY, revRad: state.revRad };
+            const newP = { n: n.trim(), s, type: state.type, linAng: state.linAng, linSize: state.linSize, linPos: state.linPos, blend: state.blend, radX: state.radX, radY: state.radY, radR: state.radR, radShape: state.radShape, conAng: state.conAng, conX: state.conX, conY: state.conY, revRad: state.revRad };
             PRESETS.push(newP);
             saveSystemPresets();
             initPresets();
