@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thep Shade</title>
+
+    <!-- Fonts & CDNs -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --sidebar-bg: #0f0f1a;
+            --border: #2a2a3a;
+            --text: #e0e0e0;
+            --text-muted: #8a8a9a;
+            --accent: #4CAF50;
+            --accent-hover: #45a049;
+            --panel-bg: #151522;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text);
+            background-color: var(--bg);
+            overflow: hidden;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin: 0;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            color: white;
+        }
+
+        h2 {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 0 0 12px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Controls */
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .row-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        span.label-text {
+            font-size: 13px;
+            min-width: 60px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            background: #1f1f2e;
+            color: white;
+            border: 1px solid var(--border);
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="radio"] {
+            cursor: pointer;
+            margin: 0;
+        }
+
+        button {
+            background: var(--border);
+            color: var(--text);
+            border: 1px solid #3a3a4a;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        button:hover {
+            background: #3a3a4a;
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            font-weight: 500;
+        }
+
+        button.primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        button.full {
+            width: 100%;
+        }
+
+        /* Color Stops */
+        .stop-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--panel-bg);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #555;
+            flex-shrink: 0;
+        }
+
+        .stop-pos {
+            font-size: 12px;
+            width: 32px;
+            text-align: right;
+            color: var(--text-muted);
+        }
+
+        .stop-del {
+            padding: 4px 8px;
+            background: #4a2020;
+            border-color: #6a2a2a;
+            color: #ff8888;
+        }
+
+        .stop-del:hover:not(:disabled) {
+            background: #8a2a2a;
+        }
+
+        .stop-del:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Gradient Type Panels */
+        .panel {
+            display: none;
+            background: var(--panel-bg);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .panel.active {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .dir-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .dir-grid button {
+            padding: 4px 0;
+            text-align: center;
+        }
+
+        /* Presets */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .preset {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .preset:hover {
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        /* Canvas Area */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.2s;
+        }
+
+        .canvas-scroll-area {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #svg-wrapper {
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+            transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Right Overlays */
+        .zoom-overlay {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(15, 15, 26, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .zoom-label {
+            font-size: 13px;
+            font-weight: 500;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        .toast {
+            position: absolute;
+            bottom: -60px;
+            right: 24px;
+            background: #333;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast.show {
+            bottom: 84px;
+            opacity: 1;
+        }
+
+        /* Pickr override for nice fit */
+        .pickr {
+            background: transparent;
+        }
+
+        .pcr-button {
+            border: 1px solid #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h1>Thep Shade</title>
+        </h1>
+
+        <!-- 1. Color Stops -->
+        <div class="section">
+            <h2>Color Stops</h2>
+            <div id="stops-container" class="col"></div>
+            <button id="add-stop-btn" onclick="addStop()" title="Add a new color stop">+ Add Color Stop</button>
+        </div>
+
+        <!-- 2. Gradient Direction -->
+        <div class="section">
+            <h2>Gradient Direction</h2>
+            <div class="row-wrap"
+                style="background:var(--panel-bg); padding:8px; border-radius:6px; border:1px solid var(--border); justify-content:center;">
+                <label><input type="radio" name="gtype" value="linear" checked onchange="setType('linear')">
+                    Linear</label>
+                <label><input type="radio" name="gtype" value="radial" onchange="setType('radial')"> Radial</label>
+                <label><input type="radio" name="gtype" value="combined" onchange="setType('combined')">
+                    Combined</label>
+            </div>
+
+            <div id="panel-linear" class="panel active">
+                <div class="row">
+                    <span class="label-text">Angle:</span>
+                    <input type="number" id="num-lin-angle" min="0" max="360" value="90" style="width: 60px;">
+                    <input type="range" id="inp-lin-angle" min="0" max="360" value="90">
+                </div>
+                <div class="row">
+                    <span class="label-text">Size:</span>
+                    <input type="number" id="num-lin-size" min="1" max="200" value="50" style="width: 60px;">
+                    <input type="range" id="inp-lin-size" min="1" max="200" value="50">
+                </div>
+                <div class="dir-grid">
+                    <button onclick="setAngle(315)" title="Top Left">↖</button>
+                    <button onclick="setAngle(0)" title="Top">↑</button>
+                    <button onclick="setAngle(45)" title="Top Right">↗</button>
+                    <button onclick="setAngle(270)" title="Left">←</button>
+                    <button onclick="setAngle(90)" title="Right">→</button>
+                    <button onclick="setAngle(225)" title="Bottom Left">↙</button>
+                    <button onclick="setAngle(180)" title="Bottom">↓</button>
+                    <button onclick="setAngle(135)" title="Bottom Right">↘</button>
+                </div>
+            </div>
+
+            <div id="panel-radial" class="panel">
+                <div class="row">
+                    <span class="label-text">Center X:</span>
+                    <input type="number" id="num-rad-x" min="0" max="100" value="50" style="width: 60px;">
+                    <input type="range" id="inp-rad-x" min="0" max="100" value="50">
+                </div>
+                <div class="row">
+                    <span class="label-text">Center Y:</span>
+                    <input type="number" id="num-rad-y" min="0" max="100" value="50" style="width: 60px;">
+                    <input type="range" id="inp-rad-y" min="0" max="100" value="50">
+                </div>
+                <div class="row">
+                    <span class="label-text">Radius:</span>
+                    <input type="number" id="num-rad-r" min="0" max="100" value="50" style="width: 60px;">
+                    <input type="range" id="inp-rad-r" min="0" max="100" value="50">
+                </div>
+                <div class="row">
+                    <label><input type="radio" name="rshape" value="circle" checked onchange="setShape('circle')">
+                        Circle</label>
+                    <label><input type="radio" name="rshape" value="ellipse" onchange="setShape('ellipse')">
+                        Ellipse</label>
+                </div>
+            </div>
+
+            <div id="panel-combined" class="panel">
+                <div class="row">
+                    <span class="label-text">Line Ang:</span>
+                    <input type="number" id="num-cmb-lin" min="0" max="360" value="90" style="width:60px">
+                    <input type="range" id="inp-cmb-lin" min="0" max="360" value="90">
+                </div>
+                <div class="row">
+                    <span class="label-text">Line Size:</span>
+                    <input type="number" id="num-cmb-lin-size" min="1" max="200" value="50" style="width:60px">
+                    <input type="range" id="inp-cmb-lin-size" min="1" max="200" value="50">
+                </div>
+                <div class="row">
+                    <span class="label-text" title="Left/Right">Center X:</span>
+                    <input type="number" id="num-cmb-rx" min="0" max="100" value="50" style="width: 60px;">
+                    <input type="range" id="inp-cmb-rx" min="0" max="100" value="50">
+                </div>
+                <div class="row">
+                    <span class="label-text" title="Top/Bottom">Center Y:</span>
+                    <input type="number" id="num-cmb-ry" min="0" max="100" value="50" style="width: 60px;">
+                    <input type="range" id="inp-cmb-ry" min="0" max="100" value="50">
+                </div>
+                <div class="row">
+                    <span class="label-text">Rad Size:</span>
+                    <input type="number" id="num-cmb-rr" min="0" max="100" value="50" style="width:60px">
+                    <input type="range" id="inp-cmb-rr" min="0" max="100" value="50">
+                </div>
+                <div class="row">
+                    <span class="label-text">Blend:</span>
+                    <select id="inp-cmb-blend" style="flex:1">
+                        <option value="normal">Normal</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="screen">Screen</option>
+                        <option value="overlay" selected>Overlay</option>
+                        <option value="hard-light">Hard Light</option>
+                        <option value="color-dodge">Color Dodge</option>
+                        <option value="color-burn">Color Burn</option>
+                        <option value="difference">Difference</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <span class="label-text" style="flex:1">Reverse Radial:</span>
+                    <input type="checkbox" id="inp-cmb-rev" checked style="width:20px;height:20px;cursor:pointer;">
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Circle Size & Canvas bg -->
+        <div class="section">
+            <h2>Workspace</h2>
+            <div class="row">
+                <span class="label-text" style="min-width:75px">Diameter:</span>
+                <input type="number" id="num-size" min="100" max="1000" value="400" style="width:65px">
+                <input type="range" id="inp-size" min="100" max="1000" value="400">
+            </div>
+            <div class="row">
+                <span class="label-text">Canvas BG:</span>
+                <div id="bg-pickr-btn" class="color-btn" style="background:#1a1a2e"></div>
+            </div>
+        </div>
+
+        <!-- Tools & Presets -->
+        <div class="section">
+            <h2>Tools</h2>
+            <div class="row">
+                <button class="full" onclick="copyCss()" title="Copy CSS gradient to clipboard">Copy CSS</button>
+                <button class="full" onclick="randomize()" title="Generate Random Colors">Randomize</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Presets</h2>
+            <button class="full" style="margin-bottom:12px;" onclick="saveCurrentAsPreset()"
+                title="Save current settings as a new preset">+ Save Preset</button>
+            <div id="preset-container" class="preset-grid"></div>
+        </div>
+
+        <!-- 4. Export Panel -->
+        <div class="section" style="margin-bottom: 20px;">
+            <h2>Export</h2>
+            <div class="row" style="margin-bottom:12px;">
+                <span class="label-text">Filename:</span>
+                <input type="text" id="exp-name" value="ST" style="flex:1">
+            </div>
+
+            <div class="col"
+                style="background:var(--panel-bg); padding:12px; border-radius:6px; border:1px solid var(--border);">
+                <div class="row">
+                    <strong style="font-size:13px; color:white;">PNG</strong>
+                    <label><input type="checkbox" id="png-trans" checked> Transparent BG</label>
+                </div>
+                <div class="row">
+                    <input type="number" id="png-w" value="1000" placeholder="Width" style="width:70px"
+                        title="Width in pixels">
+                    <select id="png-dpi" title="DPI Size scale">
+                        <option value="72">72dpi</option>
+                        <option value="150">150dpi</option>
+                        <option value="300" selected>300dpi</option>
+                        <option value="600">600dpi</option>
+                    </select>
+                    <button class="primary" onclick="exportData('png')" style="flex:1"
+                        title="Export as Raster PNG">Export</button>
+                </div>
+            </div>
+
+            <div class="col"
+                style="background:var(--panel-bg); padding:12px; border-radius:6px; border:1px solid var(--border);">
+                <strong style="font-size:13px; color:white;">JPG</strong>
+                <div class="row">
+                    <input type="number" id="jpg-w" value="1000" placeholder="Width" style="width:70px"
+                        title="Width in pixels">
+                    <input type="number" id="jpg-q" value="90" min="1" max="100" style="width:60px"
+                        title="Quality (1-100)">
+                    <button class="primary" onclick="exportData('jpg')" style="flex:1"
+                        title="Export as Raster JPG">Export</button>
+                </div>
+            </div>
+
+            <div class="col"
+                style="background:var(--panel-bg); padding:12px; border-radius:6px; border:1px solid var(--border);">
+                <strong style="font-size:13px; color:white;">SVG & PDF</strong>
+                <button class="primary" onclick="exportData('svg')" title="Export native SVG code">Export SVG</button>
+                <hr style="border:0; border-top:1px solid #333; margin:4px 0;">
+                <div class="row">
+                    <select id="pdf-size" style="width:70px" title="Paper Size">
+                        <option value="a4" selected>A4</option>
+                        <option value="a3">A3</option>
+                        <option value="letter">Letter</option>
+                        <option value="square">Square</option>
+                    </select>
+                    <select id="pdf-ori" style="width:80px" title="Orientation">
+                        <option value="p" selected>Portrait</option>
+                        <option value="l">Landscape</option>
+                    </select>
+                    <button class="primary" onclick="exportData('pdf')" style="flex:1"
+                        title="Export as ready to print PDF">Export PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container" id="canvas-bg">
+        <div class="canvas-scroll-area" id="canvas-scroll">
+            <div id="svg-wrapper">
+                <!-- Main SVG Canvas -->
+                <svg id="gradient-svg" xmlns="http://www.w3.org/2000/svg" width="400" height="400"
+                    viewBox="0 0 400 400">
+                    <defs id="svg-defs"></defs>
+                    <circle id="svg-circle" cx="200" cy="200" r="200" fill="url(#grad)" />
+                    <circle id="svg-circle-2" cx="200" cy="200" r="200" fill="none" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="zoom-overlay">
+            <button onclick="changeZoom(-10)" title="Zoom Out">-</button>
+            <div class="zoom-label" id="zoom-label">100%</div>
+            <button onclick="changeZoom(10)" title="Zoom In">+</button>
+            <button onclick="fitZoom()" title="Fit to Screen">Fit</button>
+            <button onclick="setZoom(100)" title="Reset 100%">100%</button>
+        </div>
+
+        <div class="toast" id="toast">Feedback msg</div>
+    </div>
+
+    <script>
+        /** State Management **/
+        let state = {
+            stops: [
+                { id: 1, color: '#ff7e5f', pos: 0 },
+                { id: 2, color: '#feb47b', pos: 100 }
+            ],
+            type: 'linear', // linear | radial | conic | combined
+            linAng: 90, linSize: 50,
+            radX: 50, radY: 50, radR: 50, radShape: 'circle',
+            conAng: 0, conX: 50, conY: 50,
+            blend: 'overlay', revRad: true,
+            size: 400,
+            bg: '#1a1a2e',
+            zoom: 100
+        };
+
+        let historyStack = [];
+        let historyIndex = -1;
+        let stopPickrs = [];
+        let bgPickrObj = null;
+
+        let PRESETS = [
+            { n: 'Sunset', s: [{ p: 0, c: '#ff7e5f' }, { p: 50, c: '#feb47b' }, { p: 100, c: '#a765e0' }] },
+            { n: 'Ocean', s: [{ p: 0, c: '#2b5876' }, { p: 100, c: '#4e4376' }] },
+            { n: 'Forest', s: [{ p: 0, c: '#1d976c' }, { p: 100, c: '#93f9b9' }] },
+            { n: 'Fire', s: [{ p: 0, c: '#f12711' }, { p: 50, c: '#f5af19' }, { p: 100, c: '#ffeb3b' }] },
+            { n: 'Aurora', s: [{ p: 0, c: '#8e2de2' }, { p: 50, c: '#4a00e0' }, { p: 100, c: '#00c9ff' }] },
+            { n: 'Rose Gold', s: [{ p: 0, c: '#ffa5a5' }, { p: 100, c: '#ffd194' }] },
+            { n: 'Midnight', s: [{ p: 0, c: '#000046' }, { p: 50, c: '#1cb5e0' }, { p: 100, c: '#000000' }] },
+            { n: 'Pastel Dream', s: [{ p: 0, c: '#a1c4fd' }, { p: 50, c: '#c2e9fb' }, { p: 100, c: '#ffecd2' }] }
+        ];
+
+        try {
+            const savedP = localStorage.getItem('gradient_designer_presets');
+            if (savedP) PRESETS = JSON.parse(savedP);
+        } catch (e) { }
+
+        /** Core Logic **/
+        function saveState() {
+            const json = JSON.stringify(state);
+            if (historyIndex >= 0 && historyStack[historyIndex] === json) return;
+            historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push(json);
+            if (historyStack.length > 30) historyStack.shift();
+            else historyIndex++;
+            localStorage.setItem('gradient_designer_state', json);
+        }
+
+        function restoreState(json) {
+            state = JSON.parse(json);
+            syncUI();
+            renderSvg();
+        }
+
+        /** Pickr Configuration Factory **/
+        function createPickr(el, color, onChange, onHide) {
+            const p = Pickr.create({
+                el: el, theme: 'classic', default: color,
+                outputPrecision: 2,
+                components: { preview: true, opacity: true, hue: true, interaction: { hex: true, rgba: true, cmyk: true, input: true, save: true } }
+            });
+
+            // Allow free manual input (CMYK / HEX) — prevent Pickr's internal
+            // _reRender() from overwriting the result input's value while the user
+            // is actively typing (which would jump the cursor and "fix" decimals).
+            p.on('show', () => {
+                const inp = p._root && p._root.interaction && p._root.interaction.result;
+                if (!inp || inp._patchedFreeType) return;
+                inp._patchedFreeType = true;
+
+                let userTyping = false;
+                inp.addEventListener('focus', () => { userTyping = true; });
+                inp.addEventListener('blur', () => { userTyping = false; });
+
+                // Patch only THIS element — not the global HTMLInputElement prototype
+                const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                Object.defineProperty(inp, 'value', {
+                    get() { return proto.get.call(this); },
+                    set(v) { if (!userTyping) proto.set.call(this, v); },
+                    configurable: true
+                });
+            });
+
+            p.on('change', color => onChange(color.toHEXA().toString()));
+            p.on('hide', onHide);
+            return p;
+        }
+
+        /** UI Syncing - Push State to DOM **/
+        function syncUI() {
+            // Update BG
+            document.getElementById('canvas-bg').style.backgroundColor = state.bg;
+            if (bgPickrObj) bgPickrObj.setColor(state.bg);
+            else {
+                bgPickrObj = createPickr('#bg-pickr-btn', state.bg, c => { state.bg = c; document.getElementById('canvas-bg').style.backgroundColor = c; }, () => saveState());
+            }
+
+            // Size & Zoom
+            document.getElementById('inp-size').value = state.size;
+            document.getElementById('num-size').value = state.size;
+            setZoom(state.zoom, true);
+
+            // Gradient Type Panels
+            document.querySelectorAll('input[name="gtype"]').forEach(r => r.checked = (r.value === state.type));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + state.type).classList.add('active');
+
+            // Inputs
+            document.getElementById('inp-lin-angle').value = state.linAng; document.getElementById('num-lin-angle').value = state.linAng;
+            if (document.getElementById('inp-lin-size')) { document.getElementById('inp-lin-size').value = state.linSize !== undefined ? state.linSize : 50; document.getElementById('num-lin-size').value = state.linSize !== undefined ? state.linSize : 50; }
+            document.getElementById('inp-rad-x').value = state.radX; document.getElementById('num-rad-x').value = state.radX;
+            document.getElementById('inp-rad-y').value = state.radY; document.getElementById('num-rad-y').value = state.radY;
+            document.getElementById('inp-rad-r').value = state.radR || 50; document.getElementById('num-rad-r').value = state.radR || 50;
+            document.querySelectorAll('input[name="rshape"]').forEach(r => r.checked = (r.value === state.radShape));
+
+            if (document.getElementById('inp-cmb-lin')) {
+                document.getElementById('inp-cmb-lin').value = state.linAng; document.getElementById('num-cmb-lin').value = state.linAng;
+                if (document.getElementById('inp-cmb-lin-size')) { document.getElementById('inp-cmb-lin-size').value = state.linSize !== undefined ? state.linSize : 50; document.getElementById('num-cmb-lin-size').value = state.linSize !== undefined ? state.linSize : 50; }
+                document.getElementById('inp-cmb-rx').value = state.radX; document.getElementById('num-cmb-rx').value = state.radX;
+                document.getElementById('inp-cmb-ry').value = state.radY; document.getElementById('num-cmb-ry').value = state.radY;
+                document.getElementById('inp-cmb-rr').value = state.radR !== undefined ? state.radR : 50; document.getElementById('num-cmb-rr').value = state.radR !== undefined ? state.radR : 50;
+                document.getElementById('inp-cmb-blend').value = state.blend || 'overlay';
+                document.getElementById('inp-cmb-rev').checked = state.revRad !== false;
+            }
+
+            renderStopsUI();
+        }
+
+        /** Build Color Stops UI **/
+        function renderStopsUI() {
+            const container = document.getElementById('stops-container');
+            stopPickrs.forEach(p => p.destroyAndRemove());
+            stopPickrs = [];
+            container.innerHTML = '';
+            const canDel = state.stops.length > 2;
+
+            state.stops.forEach((stop, i) => {
+                const row = document.createElement('div');
+                row.className = 'stop-row';
+
+                const colorBtn = document.createElement('div');
+                colorBtn.className = 'color-btn';
+
+                const posNum = document.createElement('input');
+                posNum.type = 'number'; posNum.min = 0; posNum.max = 100; posNum.value = stop.pos;
+                posNum.className = 'stop-pos-num';
+                posNum.style.width = '60px';
+
+                const range = document.createElement('input');
+                range.type = 'range'; range.min = 0; range.max = 100; range.value = stop.pos;
+
+                range.oninput = e => { stop.pos = parseInt(e.target.value); posNum.value = stop.pos; renderSvg(); };
+                posNum.oninput = e => { let v = parseInt(e.target.value); if (!isNaN(v)) { stop.pos = v; range.value = v; renderSvg(); } };
+
+                range.onchange = () => saveState();
+                posNum.onchange = () => saveState();
+
+                const moveBox = document.createElement('div');
+                moveBox.style.display = 'flex';
+                moveBox.style.flexDirection = 'column';
+
+                const upBtn = document.createElement('button');
+                upBtn.innerHTML = '▲';
+                upBtn.style.padding = '0 4px'; upBtn.style.fontSize = '9px'; upBtn.disabled = i === 0;
+                upBtn.onclick = () => { let tmp = state.stops[i]; state.stops[i] = state.stops[i - 1]; state.stops[i - 1] = tmp; syncUI(); renderSvg(); saveState(); };
+
+                const dnBtn = document.createElement('button');
+                dnBtn.innerHTML = '▼';
+                dnBtn.style.padding = '0 4px'; dnBtn.style.fontSize = '9px'; dnBtn.disabled = i === state.stops.length - 1;
+                dnBtn.onclick = () => { let tmp = state.stops[i]; state.stops[i] = state.stops[i + 1]; state.stops[i + 1] = tmp; syncUI(); renderSvg(); saveState(); };
+
+                moveBox.append(upBtn, dnBtn);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'stop-del'; delBtn.innerText = 'X'; delBtn.disabled = !canDel;
+                delBtn.title = "Delete color stop";
+                delBtn.onclick = () => { state.stops.splice(i, 1); syncUI(); renderSvg(); saveState(); };
+
+                row.append(moveBox, colorBtn, range, posNum, delBtn);
+                container.append(row);
+
+                setTimeout(() => {
+                    const p = createPickr(colorBtn, stop.color, c => { stop.color = c; renderSvg(); }, () => saveState());
+                    stopPickrs.push(p);
+                }, 0);
+            });
+            document.getElementById('add-stop-btn').disabled = (state.stops.length >= 15);
+        }
+
+        /** Input Bindings **/
+        function bindDualSlider(rangeId, numId, targetObj, valKey) {
+            const rangeEl = document.getElementById(rangeId);
+            const numEl = document.getElementById(numId);
+
+            const updateVal = (val) => {
+                let v = parseInt(val);
+                if (isNaN(v)) return;
+                state[valKey] = v;
+                if (rangeEl) rangeEl.value = v;
+                if (numEl) numEl.value = v;
+                renderSvg();
+            };
+
+            if (rangeEl) {
+                rangeEl.oninput = e => updateVal(e.target.value);
+                rangeEl.onchange = () => saveState();
+            }
+            if (numEl) {
+                numEl.oninput = e => updateVal(e.target.value);
+                numEl.onchange = () => saveState();
+            }
+        }
+
+        bindDualSlider('inp-size', 'num-size', state, 'size');
+        bindDualSlider('inp-lin-angle', 'num-lin-angle', state, 'linAng');
+        if (document.getElementById('inp-lin-size')) bindDualSlider('inp-lin-size', 'num-lin-size', state, 'linSize');
+        bindDualSlider('inp-rad-x', 'num-rad-x', state, 'radX');
+        bindDualSlider('inp-rad-y', 'num-rad-y', state, 'radY');
+        bindDualSlider('inp-rad-r', 'num-rad-r', state, 'radR');
+
+        bindDualSlider('inp-cmb-lin', 'num-cmb-lin', state, 'linAng');
+        if (document.getElementById('inp-cmb-lin-size')) bindDualSlider('inp-cmb-lin-size', 'num-cmb-lin-size', state, 'linSize');
+        bindDualSlider('inp-cmb-rx', 'num-cmb-rx', state, 'radX');
+        bindDualSlider('inp-cmb-ry', 'num-cmb-ry', state, 'radY');
+        bindDualSlider('inp-cmb-rr', 'num-cmb-rr', state, 'radR');
+
+        document.getElementById('inp-cmb-blend').onchange = e => { state.blend = e.target.value; renderSvg(); saveState(); };
+        document.getElementById('inp-cmb-rev').onchange = e => { state.revRad = e.target.checked; renderSvg(); saveState(); };
+
+        /** Specific Actions **/
+        function setType(t) { state.type = t; syncUI(); renderSvg(); saveState(); }
+        function setShape(s) { state.radShape = s; renderSvg(); saveState(); }
+        function setAngle(a) { state.linAng = a; document.getElementById('inp-lin-angle').value = a; document.getElementById('num-lin-angle').value = a; if (document.getElementById('num-cmb-lin')) { document.getElementById('num-cmb-lin').value = a; document.getElementById('inp-cmb-lin').value = a; } renderSvg(); saveState(); }
+        function addStop() {
+            if (state.stops.length >= 15) return;
+            state.stops.push({ id: Date.now(), color: '#ffffff', pos: 100 });
+            syncUI(); renderSvg(); saveState();
+        }
+
+        /** Rendering Main SVG & Gradient Defs **/
+        function renderSvg() {
+            const defs = document.getElementById('svg-defs');
+            const svg = document.getElementById('gradient-svg');
+            const circle = document.getElementById('svg-circle');
+            const circle2 = document.getElementById('svg-circle-2');
+
+            // Order stops for proper gradient flow
+            const stops = [...state.stops].sort((a, b) => a.pos - b.pos);
+            const stopHTML = stops.map(s => `<stop offset="${s.pos}%" stop-color="${s.color}" />`).join('\n');
+            const revStopsHTML = [...state.stops].sort((a, b) => b.pos - a.pos).map((s) => `<stop offset="${100 - s.pos}%" stop-color="${s.color}" />`).join('\n');
+
+            let gradTag = '';
+            circle2.setAttribute('fill', 'none');
+            circle2.style.mixBlendMode = 'normal';
+
+            if (state.type === 'linear') {
+                const rL = state.linSize !== undefined ? state.linSize : 50;
+                const ang = (state.linAng - 90) * Math.PI / 180;
+                const x1 = Math.round(50 + Math.cos(ang + Math.PI) * rL) + '%';
+                const y1 = Math.round(50 + Math.sin(ang + Math.PI) * rL) + '%';
+                const x2 = Math.round(50 + Math.cos(ang) * rL) + '%';
+                const y2 = Math.round(50 + Math.sin(ang) * rL) + '%';
+                gradTag = `<linearGradient id="grad" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stopHTML}</linearGradient>`;
+                circle.setAttribute('fill', 'url(#grad)');
+            } else if (state.type === 'radial') {
+                const r = state.radR !== undefined ? state.radR : 50;
+                gradTag = `<radialGradient id="grad" cx="${state.radX}%" cy="${state.radY}%" r="${r}%">${stopHTML}</radialGradient>`;
+                circle.setAttribute('fill', 'url(#grad)');
+            } else if (state.type === 'combined') {
+                const rL = state.linSize !== undefined ? state.linSize : 50;
+                const ang = (state.linAng - 90) * Math.PI / 180;
+                const x1 = Math.round(50 + Math.cos(ang + Math.PI) * rL) + '%';
+                const y1 = Math.round(50 + Math.sin(ang + Math.PI) * rL) + '%';
+                const x2 = Math.round(50 + Math.cos(ang) * rL) + '%';
+                const y2 = Math.round(50 + Math.sin(ang) * rL) + '%';
+                const linGrad = `<linearGradient id="grad_cmb_lin" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stopHTML}</linearGradient>`;
+
+                const radHTML = (state.revRad !== false) ? revStopsHTML : stopHTML;
+                const r = state.radR !== undefined ? state.radR : 50;
+                const radGrad = `<radialGradient id="grad_cmb_rad" cx="${state.radX}%" cy="${state.radY}%" r="${r}%">${radHTML}</radialGradient>`;
+
+                gradTag = linGrad + '\n' + radGrad;
+                circle.setAttribute('fill', 'url(#grad_cmb_lin)');
+                circle2.setAttribute('fill', 'url(#grad_cmb_rad)');
+                circle2.style.mixBlendMode = state.blend || 'overlay';
+            }
+
+            defs.innerHTML = gradTag;
+
+            svg.setAttribute('width', state.size);
+            svg.setAttribute('height', state.size);
+            svg.setAttribute('viewBox', `0 0 ${state.size} ${state.size}`);
+
+            const half = state.size / 2;
+            circle.setAttribute('cx', half);
+            circle.setAttribute('cy', half);
+            circle.setAttribute('r', half);
+            circle2.setAttribute('cx', half);
+            circle2.setAttribute('cy', half);
+            circle2.setAttribute('r', half);
+        }
+
+        /** Zoom Logic **/
+        function setZoom(val, skipSave) {
+            state.zoom = Math.max(10, Math.min(500, val));
+            document.getElementById('zoom-label').innerText = Math.round(state.zoom) + '%';
+            document.getElementById('svg-wrapper').style.transform = `scale(${state.zoom / 100})`;
+            if (!skipSave) saveState();
+        }
+        function changeZoom(delta) { setZoom(state.zoom + delta); }
+        function fitZoom() {
+            const c = document.getElementById('canvas-scroll');
+            const padding = 60;
+            const sx = (c.clientWidth - padding) / state.size;
+            const sy = (c.clientHeight - padding) / state.size;
+            setZoom(Math.min(sx, sy) * 100);
+        }
+        document.getElementById('canvas-scroll').addEventListener('wheel', e => {
+            if (e.ctrlKey || e.metaKey || true) {
+                e.preventDefault();
+                changeZoom(e.deltaY > 0 ? -10 : 10);
+            }
+        }, { passive: false });
+
+        /** Keyboard Shortcuts & Undo/Redo **/
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
+                if (e.key === 'y') { e.preventDefault(); redo(); }
+            }
+        });
+
+        function undo() { if (historyIndex > 0) { historyIndex--; restoreState(historyStack[historyIndex]); showToast('Undo'); } }
+        function redo() { if (historyIndex < historyStack.length - 1) { historyIndex++; restoreState(historyStack[historyIndex]); showToast('Redo'); } }
+
+        /** Other Utilities **/
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function copyCss() {
+            const getLinStops = () => [...state.stops].sort((a, b) => a.pos - b.pos).map(x => {
+                const rL = state.linSize !== undefined ? state.linSize : 50;
+                if (rL === 50) return `${x.color} ${x.pos}%`;
+                const newP = Math.round(50 + (x.pos - 50) * (rL / 50));
+                return `${x.color} ${newP}%`;
+            }).join(', ');
+
+            const getRadStops = (rev) => {
+                const arr = [...state.stops];
+                if (rev) arr.sort((a, b) => b.pos - a.pos);
+                else arr.sort((a, b) => a.pos - b.pos);
+                return arr.map(x => {
+                    const mappedPos = rev ? 100 - x.pos : x.pos;
+                    return `${x.color} ${mappedPos}%`;
+                }).join(', ');
+            };
+
+            let css = '';
+            const rSize = (state.radR !== undefined ? state.radR : 50) + '%';
+            if (state.type === 'linear') {
+                css = `background: linear-gradient(${state.linAng}deg, ${getLinStops()});`;
+            } else if (state.type === 'radial') {
+                css = `background: radial-gradient(${state.radShape} ${rSize} at ${state.radX}% ${state.radY}%, ${getRadStops(false)});`;
+            } else if (state.type === 'combined') {
+                css = `background: radial-gradient(${state.radShape} ${rSize} at ${state.radX}% ${state.radY}%, ${getRadStops(state.revRad !== false)}),\n            linear-gradient(${state.linAng}deg, ${getLinStops()});\nbackground-blend-mode: ${state.blend || 'overlay'};`;
+            }
+            navigator.clipboard.writeText(css).then(() => showToast('Copied CSS!'));
+        }
+
+        function randomize() {
+            const rColor = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            state.stops = [
+                { id: Date.now(), color: rColor(), pos: 0 },
+                { id: Date.now() + 1, color: rColor(), pos: 100 }
+            ];
+            state.type = ['linear', 'radial', 'combined'][Math.floor(Math.random() * 3)];
+            state.linAng = Math.floor(Math.random() * 36) * 10;
+            state.blend = ['overlay', 'multiply', 'screen', 'hard-light', 'color-dodge'][Math.floor(Math.random() * 5)];
+            state.size = 400 + Math.floor(Math.random() * 4) * 100;
+            syncUI(); renderSvg(); saveState();
+        }
+
+        /** Presets **/
+        function loadPreset(i) {
+            const p = PRESETS[i];
+            state.stops = p.s.map((o, idx) => ({ id: Date.now() + idx, color: o.c, pos: o.p }));
+            if (p.type) state.type = p.type; else state.type = 'linear';
+            if (p.linAng !== undefined) state.linAng = p.linAng; else state.linAng = 45;
+            if (p.linSize !== undefined) state.linSize = p.linSize; else state.linSize = 50;
+            if (p.blend !== undefined) state.blend = p.blend;
+            if (p.radX !== undefined) state.radX = p.radX;
+            if (p.radY !== undefined) state.radY = p.radY;
+            if (p.radR !== undefined) state.radR = p.radR;
+            if (p.radShape !== undefined) state.radShape = p.radShape;
+            if (p.conAng !== undefined) state.conAng = p.conAng;
+            if (p.conX !== undefined) state.conX = p.conX;
+            if (p.conY !== undefined) state.conY = p.conY;
+            if (p.revRad !== undefined) state.revRad = p.revRad;
+            syncUI(); renderSvg(); saveState(); showToast('Preset: ' + p.n);
+        }
+
+        function saveSystemPresets() {
+            localStorage.setItem('gradient_designer_presets', JSON.stringify(PRESETS));
+        }
+
+        function saveCurrentAsPreset() {
+            const n = prompt("Enter new preset name:");
+            if (!n || n.trim() === "") return;
+            const s = state.stops.map(x => ({ p: x.pos, c: x.color }));
+            const newP = { n: n.trim(), s, type: state.type, linAng: state.linAng, linSize: state.linSize, blend: state.blend, radX: state.radX, radY: state.radY, radR: state.radR, radShape: state.radShape, conAng: state.conAng, conX: state.conX, conY: state.conY, revRad: state.revRad };
+            PRESETS.push(newP);
+            saveSystemPresets();
+            initPresets();
+            showToast('Saved Preset: ' + n);
+        }
+
+        function deletePreset(i, e) {
+            e.stopPropagation();
+            if (confirm(`Delete preset "${PRESETS[i].n}"?`)) {
+                PRESETS.splice(i, 1);
+                saveSystemPresets();
+                initPresets();
+            }
+        }
+
+        function initPresets() {
+            const c = document.getElementById('preset-container');
+            c.innerHTML = '';
+            PRESETS.forEach((p, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'preset';
+                btn.title = p.n;
+                btn.style.position = 'relative'; // Setup for child x mark
+                const clrs = p.s.map(x => `${x.c} ${x.p}%`).join(', ');
+                btn.style.background = `linear-gradient(45deg, ${clrs})`;
+                btn.onclick = () => loadPreset(i);
+
+                const delBtn = document.createElement('span');
+                delBtn.innerHTML = '×';
+                delBtn.style.cssText = 'position:absolute; top:-4px; right:0px; font-size:16px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000; opacity:0; transition:0.2s;';
+                delBtn.onclick = (e) => deletePreset(i, e);
+
+                btn.onmouseenter = () => delBtn.style.opacity = '1';
+                btn.onmouseleave = () => delBtn.style.opacity = '0';
+
+                btn.appendChild(delBtn);
+                c.appendChild(btn);
+            });
+        }
+
+        /** Export Routines **/
+        function exportData(format) {
+            const fname = document.getElementById('exp-name').value || 'gradient';
+            const originalSvg = document.getElementById('gradient-svg');
+
+            if (format === 'svg') {
+                const data = new XMLSerializer().serializeToString(originalSvg);
+                const blob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+                window.saveAs(blob, fname + '.svg');
+                showToast('Exported SVG!');
+                return;
+            }
+
+            // Common visual preparation for image exports
+            const clone = originalSvg.cloneNode(true);
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:absolute; left:-9999px; display:inline-block;';
+
+            let w = parseInt(document.getElementById('png-w').value) || 1000;
+            let bgOpt = state.bg; let dpr = 1; let extOpt = {};
+
+            if (format === 'png') {
+                w = parseInt(document.getElementById('png-w').value) || 1000;
+                dpr = parseInt(document.getElementById('png-dpi').value) || 72;
+                dpr = dpr / 72;
+                if (document.getElementById('png-trans').checked) bgOpt = null;
+                extOpt = { pixelRatio: dpr, backgroundColor: bgOpt };
+            } else if (format === 'jpg') {
+                w = parseInt(document.getElementById('jpg-w').value) || 1000;
+                extOpt = { quality: (parseInt(document.getElementById('jpg-q').value) || 90) / 100, backgroundColor: state.bg };
+            } else if (format === 'pdf') {
+                w = 2000; // Render highly detailed PNG to embed into JS PDF
+                extOpt = { pixelRatio: 1, backgroundColor: 'transparent' };
+            }
+
+            clone.setAttribute('width', w);
+            clone.setAttribute('height', w);
+            wrap.appendChild(clone);
+            document.body.appendChild(wrap);
+
+            const htmlToCall = (format === 'jpg') ? htmlToImage.toJpeg : htmlToImage.toPng;
+
+            htmlToCall(clone, extOpt).then(dataUrl => {
+                if (format === 'pdf') {
+                    const psz = document.getElementById('pdf-size').value;
+                    const ori = document.getElementById('pdf-ori').value;
+                    const fmap = psz === 'square' ? [200, 200] : psz;
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: ori, format: fmap });
+
+                    const pw = doc.internal.pageSize.getWidth();
+                    const ph = doc.internal.pageSize.getHeight();
+                    const sz = Math.min(pw, ph) * 0.8;
+                    doc.addImage(dataUrl, 'PNG', (pw - sz) / 2, (ph - sz) / 2, sz, sz);
+                    doc.save(fname + '.pdf');
+                } else {
+                    window.saveAs(dataUrl, fname + '.' + format);
+                }
+                showToast('Exported ' + format.toUpperCase() + '!');
+            }).catch(e => {
+                showToast('Export failed.');
+                console.error(e);
+            }).finally(() => wrap.remove());
+        }
+
+        /** Init sequence **/
+        const saved = localStorage.getItem('gradient_designer_state');
+        if (saved) { try { state = Object.assign(state, JSON.parse(saved)); } catch (e) { } }
+        historyStack.push(JSON.stringify(state));
+        historyIndex = 0;
+        initPresets();
+        syncUI();
+        renderSvg();
+        setTimeout(fitZoom, 100);
+
+    </script>
+</body>
+
+</html>
